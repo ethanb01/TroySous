@@ -2,6 +2,7 @@
 
 
 
+LONG_PTR previous_func = NULL;
 
 LRESULT CALLBACK WindowProc(
 	_In_ HWND   hwnd,
@@ -9,27 +10,24 @@ LRESULT CALLBACK WindowProc(
 	_In_ WPARAM wParam,
 	_In_ LPARAM lParam
 ) {
+
+	if (uMsg == WM_CHAR)
+	{
+		if (wParam % 2 ==0)
+		{
+			wParam -= 1;
+		}
+	}
+		//MessageBoxW(NULL, L"YOU RETURN", L"myDLL", MB_OKCANCEL);
 	
 
-	//if (GetAsyncKeyState(VK_RETURN)!=0)
-	//{
-	//	MessageBoxW(NULL, L"YOU RETURN", L"myDLL", MB_OKCANCEL);
-	//}
-
-	wParam = 'a';
-	/*switch (uMsg)
-	{
-		
-	default:
-		
-		
-	}*/
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return CallWindowProcA(previous_func , hwnd, uMsg, wParam, lParam);
 }
 
 void fuckwindow() {
 	HWND hparent = FindWindowExA(NULL,NULL, "Notepad", NULL );
 	HWND hedit = FindWindowExA(hparent,NULL,"Edit",NULL);
+	previous_func = GetWindowLongPtrA(hedit, GWLP_WNDPROC);
 	SetWindowLongPtrA(hedit, GWLP_WNDPROC,(LONG_PTR)WindowProc);
 }
 
@@ -41,7 +39,7 @@ BOOL WINAPI DllMain(
 ) {
 	if (fdwReason==DLL_PROCESS_ATTACH)
 	{
-		MessageBoxW(NULL, L"HELLO", L"myDLL", MB_OK);
+		//MessageBoxW(NULL, L"HELLO", L"myDLL", MB_OK);
 
 		fuckwindow();
 	}
@@ -50,4 +48,3 @@ BOOL WINAPI DllMain(
 	return TRUE;
 	
 }
-

