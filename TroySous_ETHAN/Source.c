@@ -108,6 +108,7 @@ ReadConsoleInput(h_in, input, 128 , &toWrite);
 		HANDLE hp = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid_notepad);
 
 		LPVOID notepadMemoryPtr = VirtualAllocEx(hp, NULL, 100, MEM_COMMIT, PAGE_READWRITE);
+		//char *buf = "C:\\Users\\Elie Barkate\\Documents\\myDLL2.dll";
 
 		char *buf = "C:\\Users\\Ethan\\Desktop\\C\\TroySous_ETHAN\\x64\\Debug\\myDLL2.dll";
 		int ret = WriteProcessMemory(hp, notepadMemoryPtr, buf, strlen(buf) + 1, NULL);

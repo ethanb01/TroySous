@@ -15,11 +15,11 @@ print("client conecteeeeeeee")
 data = connected_socket.recv(1024)
 data = data.decode("utf8")
 
-f= open("copied.txt","w+")
+f= open("copied.txt","a+")
 f.write(data)
+f.close()
 
 print(data)
-
 
 
 server_socket.close()
